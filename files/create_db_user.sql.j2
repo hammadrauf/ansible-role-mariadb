@@ -1,0 +1,5 @@
+-- MariaDB user and database creation example
+-- You can customize this file as needed
+CREATE USER IF NOT EXISTS '{{ power_user }}'@'%' IDENTIFIED BY '{{ pu_pwd }}';
+GRANT ALL PRIVILEGES ON {{ mysql_db_name }}.* TO '{{ power_user }}'@'%';
+FLUSH PRIVILEGES;

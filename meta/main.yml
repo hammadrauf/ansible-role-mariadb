@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  author: Hammad Rauf
+  namespace: hammadrauf
+  role_name: mariadb
+  description: Ansible role for installing Mariadb
+  license: MIT
+  min_ansible_version: '2.16'
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Fedora
+      versions:
+        - '40'
+  galaxy_tags:
+    - mariadb
+    - mysql
+dependencies: []

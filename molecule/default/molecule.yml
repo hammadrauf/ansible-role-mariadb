@@ -1,0 +1,18 @@
+---
+driver:
+  name: podman
+
+platforms:
+  - name: ${MOLECULE_CONTAINER_NAME}
+    image: ${MOLECULE_DISTRO}  # Dynamically set via MOLECULE_DISTRO environment variable
+    command: ${MOLECULE_DOCKER_COMMAND:-""} # Ensure container remains running
+    privileged: true  # Allow necessary operations inside the container
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro  # Required for systemd compatibility
+    pre_build_image: true
+    cgroupns_mode: host
+
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

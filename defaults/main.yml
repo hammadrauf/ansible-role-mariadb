@@ -1,0 +1,9 @@
+---
+# Default variables for mariadb role
+container: docker
+term: linux
+debian_frontend: noninteractive
+mysql_db_name: my_db
+root_pwd: changeme01
+power_user: ceaser
+pu_pwd: changeme02

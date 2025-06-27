@@ -1,0 +1,103 @@
+---
+# Main MariaDB installation and configuration tasks
+- name: Set MariaDB related package names for Debian
+  ansible.builtin.set_fact:
+    mariadb_pkg: mariadb-server
+    mariadb_client: mariadb-client
+    mariadb_pymysql: python3-pymysql
+  when: ansible_os_family == 'Debian'
+
+- name: Set MariaDB related package names for RedHat
+  ansible.builtin.set_fact:
+    mariadb_pkg: mariadb-server
+    mariadb_client: mariadb
+    mariadb_pymysql: python3-PyMySQL
+  when: ansible_os_family == 'RedHat'
+
+- name: Install MariaDB server and related packages
+  ansible.builtin.package:
+    name:
+      - "{{ mariadb_pkg }}"
+      - "{{ mariadb_client }}"
+      - "{{ mariadb_pymysql }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure MariaDB is started and enabled
+  ansible.builtin.service:
+    name: "{{ 'mariadb' if ansible_os_family == 'Debian' else 'mariadb' }}"
+    state: started
+    enabled: true
+  become: true
+
+- name: Set root password
+  ansible.builtin.mysql_user:
+    name: root
+    host: "localhost"
+    password: "{{ root_pwd }}"
+    column_case_sensitive: true
+    update_password: "always"
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+  become: true
+
+- name: Remove the test database
+  ansible.builtin.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ root_pwd }}"
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"    
+  become: true
+
+- name: Ensure anonymous users are not in the database
+  ansible.builtin.mysql_user:
+    name: ""
+    host: "{{ item }}"
+    state: absent
+    login_user: root
+    login_password: "{{ root_pwd }}"
+    column_case_sensitive: true
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+  with_items:
+    - 127.0.0.1
+    - localhost
+
+- name: Create database
+  ansible.builtin.mysql_db:
+    name: "{{ mysql_db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ root_pwd }}"
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+  become: true
+
+- name: Create power user
+  ansible.builtin.mysql_user:
+    name: "{{ power_user }}"
+    password: "{{ pu_pwd }}"
+    priv: "{{ mysql_db_name }}.*:ALL"
+    host: "%"
+    column_case_sensitive: true
+    state: present
+    login_user: root
+    login_password: "{{ root_pwd }}"
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+  become: true
+
+- name: Copy custom SQL scripts (if any)
+  ansible.builtin.template:
+    src: files/create_db_user.sql.j2
+    dest: /tmp/create_db_user.sql
+    mode: '0664'
+  become: true
+
+- name: Run custom SQL script (if present)
+  ansible.builtin.mysql_db:
+    name: all
+    state: import
+    target: /tmp/create_db_user.sql
+    login_user: root
+    login_password: "{{ root_pwd }}"
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+  become: true

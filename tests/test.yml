@@ -1,0 +1,11 @@
+---
+- name: Test Local
+  hosts: localhost
+  connection: local
+  roles:
+    - role: hammadrauf.mariadb
+      vars:
+        mysql_db_name: my_db
+        root_pwd: changeme01
+        power_user: ceaser
+        pu_pwd: changeme02
