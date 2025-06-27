@@ -31,6 +31,21 @@
     enabled: true
   become: true
 
+- name: Check if root password is already set
+  ansible.builtin.shell: |
+    mysql -u root -p{{ root_pwd }} -e "SELECT 1;"
+  register: root_pwd_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Try root login with no password
+  ansible.builtin.shell: |
+    mysql -u root -e "SELECT 1;"
+  register: root_nopwd_check
+  ignore_errors: true
+  changed_when: false
+  when: root_pwd_check.rc != 0
+
 - name: Set root password
   ansible.builtin.mysql_user:
     name: root
@@ -39,7 +54,9 @@
     column_case_sensitive: true
     update_password: "always"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
+    check_implicit_admin: true
   become: true
+  when: root_pwd_check.rc != 0 and (root_nopwd_check is not defined or root_nopwd_check.rc == 0)
 
 - name: Remove the test database
   ansible.builtin.mysql_db:
@@ -47,21 +64,18 @@
     state: absent
     login_user: root
     login_password: "{{ root_pwd }}"
-    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"    
+    login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
   become: true
 
 - name: Ensure anonymous users are not in the database
   ansible.builtin.mysql_user:
     name: ""
-    host: "{{ item }}"
+    host: "localhost"
     state: absent
     login_user: root
     login_password: "{{ root_pwd }}"
     column_case_sensitive: true
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
-  with_items:
-    - 127.0.0.1
-    - localhost
 
 - name: Create database
   ansible.builtin.mysql_db:
@@ -85,19 +99,26 @@
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
   become: true
 
+- name: Check if SQL Script template exists
+  ansible.builtin.stat:
+    path: "{{ sql_script_path }}"
+  register: sql_template_stat
+
 - name: Copy custom SQL scripts (if any)
   ansible.builtin.template:
-    src: files/create_db_user.sql.j2
-    dest: /tmp/create_db_user.sql
+    src: "{{ sql_script_path }}"
+    dest: /tmp/custom_sql_script.sql
     mode: '0664'
   become: true
+  when: sql_template_stat.stat.exists
 
 - name: Run custom SQL script (if present)
   ansible.builtin.mysql_db:
     name: all
     state: import
-    target: /tmp/create_db_user.sql
+    target: /tmp/custom_sql_script.sql
     login_user: root
     login_password: "{{ root_pwd }}"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
   become: true
+  when: sql_template_stat.stat.exists

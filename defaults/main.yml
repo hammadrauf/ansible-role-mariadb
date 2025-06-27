@@ -7,3 +7,4 @@ mysql_db_name: my_db
 root_pwd: changeme01
 power_user: ceaser
 pu_pwd: changeme02
+sql_script_path: ""
