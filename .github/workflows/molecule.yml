@@ -60,6 +60,6 @@ jobs:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
           MOLECULE_IMAGE: "docker.io/geerlingguy/docker-${{ matrix.distro }}-ansible:latest"
-          #MOLECULE_DISTRO: "docker.io/geerlingguy/docker-${{ matrix.distro }}-ansible:latest"
-          MOLECULE_DISTRO: $({{ 'docker.io/geerlingguy/docker-${{ matrix.distro }}-ansible:latest' if '${{ matrix.distro }}' != 'fedora40' else 'quay.io/fedora/fedora:40' }})
+          MOLECULE_DISTRO: "docker.io/geerlingguy/docker-${{ matrix.distro }}-ansible:latest"
+          #MOLECULE_DISTRO: $({{ 'docker.io/geerlingguy/docker-${{ matrix.distro }}-ansible:latest' if '${{ matrix.distro }}' != 'fedora40' else 'quay.io/fedora/fedora:40' }})
           MOLECULE_CONTAINER_NAME: "instance-${{ matrix.distro }}"
