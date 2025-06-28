@@ -73,6 +73,9 @@ jobs:
       - name: Install Ansible
         run: pip3 install ansible-core
 
+      - name: Install test dependencies - community.mysql
+        run: ansible-galaxy collection install community.mysql
+
       - name: Trigger a new import on Galaxy
         run: >-
           ansible-galaxy role import --api-key ${{ secrets.GALAXY_API_KEY }}
