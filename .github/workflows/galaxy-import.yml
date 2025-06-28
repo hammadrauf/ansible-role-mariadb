@@ -20,8 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install test dependencies
+      - name: Install test dependencies - yamllint
         run: pip3 install yamllint
+
+      - name: Install test dependencies - community.mysql
+        run: ansible-galaxy collection install community.mysql
 
       - name: Run Yamllint
         run: yamllint .
@@ -44,8 +47,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install test dependencies
+      - name: Install test dependencies - core
         run: pip3 install ansible-core molecule molecule-plugins[docker]
+
+      - name: Install test dependencies - community.mysql
+        run: ansible-galaxy collection install community.mysql
 
       - name: Run Molecule tests
         run: molecule test --all
