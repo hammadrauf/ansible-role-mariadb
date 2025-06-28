@@ -35,14 +35,14 @@
   ansible.builtin.shell: |
     mysql -u root -p{{ root_pwd }} -e "SELECT 1;"
   register: root_pwd_check
-  ignore_errors: true
+  #ignore_errors: true
   changed_when: false
 
 - name: Try root login with no password
   ansible.builtin.shell: |
     mysql -u root -e "SELECT 1;"
   register: root_nopwd_check
-  ignore_errors: true
+  #ignore_errors: true
   changed_when: false
   when: root_pwd_check.rc != 0
 

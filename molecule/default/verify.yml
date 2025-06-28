@@ -5,7 +5,7 @@
 
     - name: Run Podman container and execute gcloud command
       ansible.builtin.command:
-        cmd: mysql --version
+        cmd: mariadb --version
       register: mariadb_version_output
       changed_when: false                          # Prevent marking this task as changed
       failed_when: mariadb_version_output.rc != 0   # Mark as failure if command exits non-zero
@@ -13,7 +13,7 @@
     - name: Assert mariadb command mariadb_version_output
       ansible.builtin.assert:
         that:
-          - "'Mariadb' in mariadb_version_output.stdout"
-          - "'sql' in mariadb_version_output.stdout"
+          - "'mariadb' in mariadb_version_output.stdout"
+          - "'Ver' in mariadb_version_output.stdout"
           - mariadb_version_output.rc == 0
         fail_msg: "mariadb command failed or --version output is incorrect."
