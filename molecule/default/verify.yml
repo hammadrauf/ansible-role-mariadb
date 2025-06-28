@@ -1,9 +1,9 @@
 ---
-- name: "Verify gcloud installation in Podman container {{ lookup('ansible.builtin.env', 'MOLECULE_CONTAINER_NAME') }}"
+- name: "Verify mariadb installation in Podman container {{ lookup('ansible.builtin.env', 'MOLECULE_CONTAINER_NAME') }}"
   hosts: all
   tasks:
 
-    - name: Run Podman container and execute gcloud command
+    - name: Run Podman container and execute mariadb command
       ansible.builtin.command:
         cmd: mariadb --version
       register: mariadb_version_output
