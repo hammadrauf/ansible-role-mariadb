@@ -23,6 +23,17 @@
     state: present
     update_cache: true
   become: true
+  when: ansible_os_family == 'Debian'
+
+- name: Install MariaDB server and related packages
+  ansible.builtin.package:
+    name:
+      - "{{ mariadb_pkg }}"
+      - "{{ mariadb_client }}"
+      - "{{ mariadb_pymysql }}"
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'RedHat'
 
 - name: Ensure MariaDB is started and enabled
   ansible.builtin.service:
@@ -30,6 +41,15 @@
     state: started
     enabled: true
   become: true
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure MariaDB is started and enabled
+  ansible.builtin.service:
+    name: "{{ 'mariadb' if ansible_os_family == 'Debian' else 'mariadb' }}"
+    state: started
+    enabled: true
+  #become: true
+  when: ansible_os_family == 'RedHat'
 
 - name: Check if root password is already set
   ansible.builtin.shell: |
@@ -55,7 +75,7 @@
     update_password: "always"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
     check_implicit_admin: true
-  become: true
+  #become: true
   when: root_pwd_check.rc != 0 and (root_nopwd_check is not defined or root_nopwd_check.rc == 0)
 
 - name: Remove the test database
@@ -65,7 +85,6 @@
     login_user: root
     login_password: "{{ root_pwd }}"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
-  become: true
 
 - name: Ensure anonymous users are not in the database
   community.mysql.mysql_user:
@@ -84,7 +103,6 @@
     login_user: root
     login_password: "{{ root_pwd }}"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
-  become: true
 
 - name: Create power user
   community.mysql.mysql_user:
@@ -97,7 +115,6 @@
     login_user: root
     login_password: "{{ root_pwd }}"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
-  become: true
 
 - name: Check if SQL Script template exists
   ansible.builtin.stat:
@@ -109,7 +126,7 @@
     src: "{{ sql_script_path }}"
     dest: /tmp/custom_sql_script.sql
     mode: '0664'
-  become: true
+  #become: true
   when: sql_template_stat.stat.exists
 
 - name: Run custom SQL script (if present)
@@ -120,5 +137,5 @@
     login_user: root
     login_password: "{{ root_pwd }}"
     login_unix_socket: "{{ '/var/run/mysqld/mysqld.sock' if ansible_os_family == 'Debian' else '/var/lib/mysql/mysql.sock' }}"
-  become: true
+  #become: true
   when: sql_template_stat.stat.exists
