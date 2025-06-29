@@ -24,13 +24,18 @@ jobs:
         run: pip3 install yamllint
 
       - name: Install test dependencies - community.mysql
-        run: ansible-galaxy collection install community.mysql
+        run: ansible-galaxy collection install community.mysql --force
 
       - name: Run Yamllint
         run: yamllint .
 
       - name: Run ansible-lint
         uses: ansible/ansible-lint@main
+        with:
+          args: ""
+          setup_python: "true"
+          working_directory: "."
+          requirements_file: "requirements.yml"
 
   molecule:
     name: Molecule

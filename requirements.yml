@@ -1,0 +1,9 @@
+---
+# requirements.yml
+#roles:
+#  - name: geerlingguy.apache
+#    version: 4.0.0
+
+collections:
+  - name: community.mysql
+    version: 3.13.0
